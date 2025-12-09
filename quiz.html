@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IQArena - MERN Stack Quiz</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+    * { box-sizing: border-box; font-family: 'Poppins', sans-serif; margin:0; padding:0;}
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #6B5B95, #FF6F61);
+    }
+
+    .container {
+      background: #fff;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 20px;
+      padding: 40px 30px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1 {
+      color: #FF6F61;
+      font-weight: 700;
+      margin-bottom: 15px;
+      text-shadow: 1px 1px 2px #fff;
+    }
+
+    /* Login Page */
+    .login-container input {
+      width: 80%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    .btn-start {
+      padding: 12px 25px;
+      border: none;
+      background: linear-gradient(135deg, #FF6F61, #FFB400);
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .btn-start:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    /* Quiz Page */
+    .timer { font-weight: 700; font-size: 1.1rem; color: #6B5B95; margin-bottom: 20px; }
+    .question { font-size: 1.3rem; font-weight: 600; color: #333; margin-bottom: 25px; }
+    .options { list-style: none; padding: 0; }
+    .options li {
+      background: linear-gradient(135deg, #FFB400, #FF6F61);
+      color: #fff;
+      margin: 12px 0;
+      padding: 15px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+    }
+    .options li:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      background: linear-gradient(135deg, #6B5B95, #88B04B);
+    }
+
+    /* Result Page */
+    .result { display: none; animation: fadeIn 1s ease-in-out; }
+    .result h2 { color: #6B5B95; font-size: 1.5rem; margin-bottom: 20px; }
+    .btn-restart { padding: 12px 25px; border: none; background: linear-gradient(135deg, #FF6F61, #FFB400); color: white; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: transform 0.3s, box-shadow 0.3s; }
+    .btn-restart:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95);} to { opacity: 1; transform: scale(1);} }
+    @media (max-width: 480px) {
+      .container { padding: 25px 15px; }
+      .question { font-size: 1.1rem; }
+      .options li { padding: 12px; font-size: 0.95rem; }
+      .login-container input { width: 90%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Login Page -->
+    <div class="login-container" id="loginPage">
+      <h1>Welcome to IQArena</h1>
+      <input type="text" id="username" placeholder="Enter Your Name" />
+      <br>
+      <button class="btn-start" id="startBtn">Start Quiz</button>
+    </div>
+
+    <!-- Quiz Page -->
+    <div class="quiz-container" id="quizPage" style="display:none;">
+      <h1>IQArena - MERN Quiz</h1>
+      <div class="timer">Time Left: <span id="time">15</span>s</div>
+      <div class="question" id="question">Question will appear here</div>
+      <ul class="options" id="options"></ul>
+      <div class="result" id="result">
+        <h2><span id="userName"></span>, Your Score: <span id="score"></span>/<span id="total"></span></h2>
+        <button class="btn-restart" id="restart">Restart Quiz</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const quizData = [
+      {question:"What does MERN stand for?", options:["MongoDB, Express, React, Node.js","MySQL, Express, React, Node.js","MongoDB, Ember, React, Node.js","MongoDB, Express, Ruby, Node.js"], answer:"MongoDB, Express, React, Node.js"},
+      {question:"Which database is used in MERN stack?", options:["MySQL","MongoDB","PostgreSQL","Firebase"], answer:"MongoDB"},
+      {question:"Which library is used for frontend in MERN?", options:["Angular","Vue.js","React","jQuery"], answer:"React"},
+      {question:"Which runtime environment is used in MERN backend?", options:["Node.js","Django","Flask","PHP"], answer:"Node.js"},
+      {question:"Which framework is used in MERN backend?", options:["Express","Laravel","Spring","Ruby on Rails"], answer:"Express"}
+    ];
+
+    const loginPage = document.getElementById('loginPage');
+    const quizPage = document.getElementById('quizPage');
+    const startBtn = document.getElementById('startBtn');
+    const usernameInput = document.getElementById('username');
+    const userNameDisplay = document.getElementById('userName');
+
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const resultEl = document.getElementById('result');
+    const scoreEl = document.getElementById('score');
+    const totalEl = document.getElementById('total');
+    const restartBtn = document.getElementById('restart');
+    const timeEl = document.getElementById('time');
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timer;
+    const timePerQuestion = 15;
+
+    startBtn.addEventListener('click', () => {
+      const name = usernameInput.value.trim();
+      if(name === "") { alert("Please enter your name!"); return; }
+      userNameDisplay.textContent = name;
+      loginPage.style.display = 'none';
+      quizPage.style.display = 'block';
+      startQuiz();
+    });
+
+    function startQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      resultEl.style.display = 'none';
+      questionEl.style.display = 'block';
+      optionsEl.style.display = 'block';
+      document.querySelector('.timer').style.display = 'block';
+      showQuestion();
+    }
+
+    function showQuestion() {
+      clearInterval(timer);
+      const q = quizData[currentQuestion];
+      questionEl.textContent = q.question;
+      optionsEl.innerHTML = '';
+      q.options.forEach(option => {
+        const li = document.createElement('li');
+        li.textContent = option;
+        li.addEventListener('click', () => selectAnswer(option));
+        optionsEl.appendChild(li);
+      });
+
+      let timeLeft = timePerQuestion;
+      timeEl.textContent = timeLeft;
+      timer = setInterval(() => {
+        timeLeft--;
+        timeEl.textContent = timeLeft;
+        if(timeLeft <= 0) { clearInterval(timer); nextQuestion(); }
+      }, 1000);
+    }
+
+    function selectAnswer(selected) {
+      if(selected === quizData[currentQuestion].answer) score++;
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      clearInterval(timer);
+      currentQuestion++;
+      if(currentQuestion < quizData.length) showQuestion();
+      else showResult();
+    }
+
+    function showResult() {
+      questionEl.style.display = 'none';
+      optionsEl.style.display = 'none';
+      document.querySelector('.timer').style.display = 'none';
+      resultEl.style.display = 'block';
+      scoreEl.textContent = score;
+      totalEl.textContent = quizData.length;
+    }
+
+    restartBtn.addEventListener('click', startQuiz);
+
+  </script>
+
+</body>
+</html>
